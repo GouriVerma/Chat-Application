@@ -9,8 +9,8 @@ const MainContainer = () => {
     <div className='bg-[#f4f5f8] w-[90vw] h-[90vh] flex rounded-2xl shadow-sm'>
         <Sidebar />
 
-        <WelcomeArea />
-        {/* <ChatArea props={{"name":"Soniya","timeStamp":"today"}} /> */}
+        {/* <WelcomeArea /> */}
+        <ChatArea props={{"name":"Soniya","timeStamp":"today"}} />
     </div>
   )
 }
