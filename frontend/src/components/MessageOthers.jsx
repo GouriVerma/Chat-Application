@@ -1,6 +1,8 @@
 import React from 'react'
+import { useSelector } from 'react-redux'
 
 const MessageOthers = ({props,group}) => {
+    const lightTheme=useSelector((state)=>state.themeKey);
   return (
     <div className='flex justify-start p-3'>
         <div className='flex gap-2'>
@@ -14,7 +16,7 @@ const MessageOthers = ({props,group}) => {
             }
 
             {/* message */}
-            <div className='bg-[#eeeded] p-2 rounded-2xl flex flex-col gap-[1px]'>
+            <div className={`p-2 rounded-2xl flex flex-col gap-[1px] ${!lightTheme ? 'bg-[#3f3e3eb2] text-white':'bg-[#eeededb2] '}`}>
                 {group && <p>{props.name}</p>}
                 <p className='text-sm'>{props.message}</p>
                 <p className='text-xs justify-self-end self-end text-gray-400'>{props.timestamp}</p>
