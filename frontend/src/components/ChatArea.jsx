@@ -1,4 +1,4 @@
-import { Delete, Send } from '@mui/icons-material'
+import { ArrowBack, Delete, Send } from '@mui/icons-material'
 import { IconButton } from '@mui/material'
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import React, { useState } from 'react'
@@ -15,7 +15,7 @@ const ChatArea = () => {
     <div className='flex-1 md:flex-[0.7] md:flex flex-col gap-1.5 h-full' >
 
         {/* ChatArea Header */}
-        <div className={`rounded-2xl m-2 p-2 flex items-center gap-2 ${!lightTheme? 'dark':'bg-white'}`} style={{boxShadow: 'rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px'}}>
+        <div className={`rounded-2xl p-2 m-2 flex items-center gap-2 ${!lightTheme? 'dark':'bg-white'}`} style={{boxShadow: 'rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px'}}>
             {/* icon */}
             <div className='w-8 h-8 flex items-center justify-center bg-[#d9d9d9] text-white text-3xl rounded-full font-semibold p-5'>
                 <p className='' >{chat.name[0]}</p>
@@ -27,11 +27,14 @@ const ChatArea = () => {
                 <p className={`text-xs ${!lightTheme?'text-[rgba(189,188,188,0.86)]':'text-[rgba(0,0,0,0.54)]'}`}>{chat.timestamp}</p>
             </div>
 
-            {/* DeleteIcon */}
+            {/* OptionsIcon */}
             <IconButton >
                 <MoreVertIcon className={`${!lightTheme?'text-white':''}`} />
             </IconButton>
         </div>
+
+
+        
 
         {/* Messages */}
         <div className={`flex-1 mx-2 rounded-2xl overflow-y-scroll ${!lightTheme?'bg-[rgba(30,27,27,0.926)]':'bg-white '}`} style={{scrollbarWidth:"none",maxHeight: 'calc(100vh - 150px)',boxShadow: 'rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px'}} >

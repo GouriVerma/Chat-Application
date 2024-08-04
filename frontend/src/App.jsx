@@ -1,5 +1,6 @@
-import { RouterProvider,createBrowserRouter, Outlet, Routes, Route } from "react-router-dom"
+import { RouterProvider,createBrowserRouter, Outlet, Routes, Route, Navigate } from "react-router-dom"
 import './App.css'
+import Cookies from "js-cookie";
 import MainPage from "./pages/MainPage"
 import LoginPage from "./pages/LoginPage"
 import WelcomeArea from "./components/WelcomeArea"
@@ -35,24 +36,37 @@ const LayoutComponent=()=>{
 const ReqAuthComponent=()=>{
   //check auth
 
-  // const {auth}=useAuth();
-  // const location=useLocation();
+  const accessToken=Cookies.get("accessToken");
+  console.log(accessToken);
   return(
     
-    <div className=''>
+    <>
+      {accessToken? <div className=''>
       <Outlet />
     </div>
-    // :
-    // <Navigate to="/login" replace={true} state={{from:location}} />
+    :
+    <Navigate to="/" />}
+    
+    </>
     
   )
 }
 
-// const LoginSignUpComponent=()=>{
-//   return (
-//     <Outlet />
-//   )
-// }
+const LoginSignUpComponent=()=>{
+  // localStorage.removeItem("userData");
+  const accessToken=Cookies.get("accessToken");
+  console.log(accessToken);
+  return (
+    <>
+      {!accessToken? <div className=''>
+      <Outlet />
+    </div>
+    :
+    <Navigate to="/app" />}
+    
+    </>
+  )
+}
 
 const router=createBrowserRouter([
   {
@@ -80,7 +94,7 @@ const router=createBrowserRouter([
   },
   {
     path:"/",
-    element:<LayoutComponent />,
+    element:<LoginSignUpComponent />,
     children:[
       {
         path: "/",
@@ -88,7 +102,7 @@ const router=createBrowserRouter([
       },
       {
         path: "/signup",
-        element:<LoginPage />
+        element:<SignupPage />
       },
       
     ]
