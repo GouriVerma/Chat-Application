@@ -23,5 +23,26 @@ const checkAuth=(req,res,next)=>{
 
     next();
 }
+const justCheckAuth=(req,res,next)=>{
+    const authHeader=req?.headers?.authorization;
+    
+    if(!authHeader){
+        return next(new CustomError("User not Authenticated",403));
+    }
 
-module.exports={checkAuth};
+    
+
+    const token=authHeader.split("Bearer ")[1];
+    try {
+        const result=validateToken(token);
+        req.user=result;
+
+    } catch (error) {
+        console.log(error);
+        
+    }
+
+    next();
+}
+
+module.exports={checkAuth,justCheckAuth};

@@ -34,7 +34,7 @@ const chatSchema=new Schema({
             type:String
         }
     }
-},{timeStamp:true})
+},{timestamps:true})
 
 const Chat=model("chat",chatSchema);
 

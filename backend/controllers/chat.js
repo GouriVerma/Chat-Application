@@ -2,24 +2,22 @@ const Chat=require("../models/chat");
 const Message=require("../models/message");
 const expressAsyncHandler=require("express-async-handler");
 const CustomError = require("../utils/error");
+const User = require("../models/user");
 
 
+//left
 const handleFetchAllChatsOfUser=expressAsyncHandler(async(req,res,next)=>{
-    // const _id=req.user._id;
-    // if(!_id){
-    //     next(new CustomError("User not authenticated",403));
-    // }
-
+    
     // const chats=await Chat.find({users:{$elemMatch:{$eq:_id}}}).populate("users","-password");
     // return res.status(200).json(chats);
 
-    console.log(req.query);
+   
     if(!req.user){
         next(new CustomError("User not authenticated",403));
     }
 
     const keyword=req?.query?.search;
-    var chats=await Chat.find({users:{$elemMatch:{$eq:req.user._id}}}).populate("users","-password");
+    // var chats=await Chat.find({users:{$elemMatch:{$eq:req.user._id}}}).populate("users","-password").populate("lastMessage");
    // return res.status(200).json(chats);
 
     if(keyword){
@@ -31,12 +29,24 @@ const handleFetchAllChatsOfUser=expressAsyncHandler(async(req,res,next)=>{
         //             {$and:[{isGroupChat:false},{users:{$elemMatch:{userName:{$regex:"^"+keyword,$options:'i'}},{_id:{$ne:req.user._id}}}}]},
         //         ]}
         //     ]}).populate("users","-password");
+
+        const chats = await Chat.find({
+            $and: [
+              { users: { $elemMatch: { $eq: req.user._id } } },
+              { users: { $elemMatch: { userName: "test3" } } }
+            ]
+          })
+          .populate("users", "-password")
+          .populate({
+            path: "lastMessage",
+            populate:{path:"sender",select: "userName email profilePicture"}
+          });
         
         return res.status(200).json(chats);
     }
 
     else{
-        var chats=await Chat.find({users:{$elemMatch:{$eq:req.user._id}}}).populate("users","-password");
+        var chats=await Chat.find({users:{$elemMatch:{$eq:req.user._id}}}).populate("users","-password").populate({path:"lastMessage",populate:{path:"sender",select:"-password"}}).sort({updatedAt:-1});
         return res.status(200).json(chats);
     }
 
@@ -54,22 +64,21 @@ const handleAccessChat=expressAsyncHandler(async(req,res,next)=>{
         {users:{$elemMatch:{$eq:req.user._id}}},
     ]}).populate("users","-password").populate("lastMessage");
 
-    console.log(chat);
 
     
 
 
     if(chat){
-        chat=await chat.populate({path:"lastMessage.sender",select:"userName email profilePicture"});
-        console.log(chat);
+        chat=await chat.populate({path:"lastMessage",populate:{path:"sender",select:"-password"}});
+  
         return res.status(200).json(chat);
     }
 
     else{
-        var newChat=await Chat.create({name:"sender",isGroupChat:false,users:[userId,req.user._id]});
+        var newChat=await Chat.create({name:"inperson",isGroupChat:false,users:[userId,req.user._id]});
         
         newChat=await newChat.populate("users","-password");
-        console.log(newChat);
+ 
         return res.status(200).json(newChat);
     }
 
@@ -86,8 +95,8 @@ const handleFetchGroups=expressAsyncHandler(async(req,res,next)=>{
         next(new CustomError("User not authenticated",403));
     }
 
-    var groupChats=await Chat.find({$and:[{users:{$elemMatch:{$eq:_id}}},{isGroupChat:true}]}).populate("users").populate("lastMessage").populate({path:"lastMessage.sender",select:"userName email profilePicture"});
-    console.log(groupChats);
+    var groupChats=await Chat.find({$and:[{users:{$elemMatch:{$eq:_id}}},{isGroupChat:true}]}).populate("users").populate({path:"lastMessage",populate:{path:"sender",select:"-password"}}).sort({updatedAt:-1});
+
     
 
     return res.status(200).json(groupChats);
@@ -115,30 +124,79 @@ const handleCreateGroup=expressAsyncHandler(async(req,res,next)=>{
 })
 
 
-// const handleCreateNewChat=expressAsyncHandler(async(req,res,next)=>{
-//     const {name,isGroupChat,users}=req.body;
-//     const currUser=req.user._id;
-//     const groupAdmin=null;
-//     if(isGroupChat){
-//         groupAdmin=req.user._id;
-//     }
+
+
+const handleDeleteGroup=expressAsyncHandler(async(req,res,next)=>{
+    if(!req.user._id){
+        return next(new CustomError("User not authenticated",403));
+    }
+
+    const {groupId}=req.body;
+    const group=await Chat.findById(groupId);
+
+    if(!group){
+        return next(new CustomError("Group not found",404));
+    }
+
+    if(!group.isGroupChat){
+        return next(new CustomError("Only groups can be deleted",400));
+    }
+
     
-//     users.push(currUser);
+    if(group.groupAdmin.toString()!==req.user._id){
+        return next(new CustomError("Only admins can delete group",400));
+    }
 
-//     console.log({name,isGroupChat,users,groupAdmin});
-//     if(!name || !users || !groupAdmin){
-//         return next(new CustomError("All information is not provided",400));
-//     }
+    //delete all messages of group
 
-//     const chat=await Chat.create({name,isGroupChat,users,groupAdmin});
-//     return res.status(200).json(chat);
-// })
+    //delete group
+    await Chat.findByIdAndDelete(groupId);
+    return res.status(200).json({msg:"Group Deleted Successfully"});
 
+})
 
-const handleDeleteChatorGroup=expressAsyncHandler(async(req,res,next)=>{
-    const id=req.params.id;
+const handleAddUserToGroup=expressAsyncHandler(async(req,res,next)=>{
+    if(!req.user._id){
+        return next(new CustomError("User not authenticated",403));
+    }
+
+    const {userId, groupId}=req.body;
+    if(!userId || !groupId){
+        return next(new CustomError("Missing information",400));
+    }
+
+    const group=await Chat.findById(groupId);
+
+    if(!group){
+        return next(new CustomError("Group not found",404));
+    }
+
+    //will not be used, we will handle it in frontend
+    if(!group.isGroupChat){
+        return next(new CustomError("Members can be added only in groups",400));
+    }
+
+    if(group.groupAdmin.toString()!==req.user._id){
+        return next(new CustomError("Only admins can add members to group",400));
+    }
+
+    const user=User.findById(userId);
+    if(!user){
+        return next("User not found",404);
+    }
+
+    //handle in frontend
+    if(group.users.toString().includes(userId)){
+        return next(new CustomError("User already added",400));
+    }
+
+    group.users.push(userId);
+    const updatedGroup=await group.save();
+    // updatedGroup=await updatedGroup.populate("users","-password");
+
+    return res.status(200).json(updatedGroup);
 
 })
 
 
-module.exports={handleFetchAllChatsOfUser,handleAccessChat,handleFetchGroups,handleCreateGroup};
+module.exports={handleFetchAllChatsOfUser,handleAccessChat,handleFetchGroups,handleCreateGroup,handleDeleteGroup,handleAddUserToGroup};

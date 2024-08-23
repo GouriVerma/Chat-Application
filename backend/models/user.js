@@ -25,13 +25,19 @@ const userSchema=new Schema({
         url:{
             type:String
         }
+        // type:String
     },
     mobileNo:{
-        type:Number,
+        type:String,
+        length:10
+    },
+    verified:{
+        type:Boolean,
+        default:false
     }
 
 
-},{timeStamp:true})
+},{timestamps:true})
 
 
 //document middleware because this refers to document

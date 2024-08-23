@@ -2,3 +2,14 @@
     background-color: rgba(30, 27, 27, 0.926);
     color: white;
 }
+
+#customCheckbox:checked::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1rem; /* Adjust the size of the checkmark */
+    font-weight: bold;
+    color: white; /* Color of the checkmark */
+}

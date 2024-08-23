@@ -5,12 +5,19 @@ import MainPage from "./pages/MainPage"
 import LoginPage from "./pages/LoginPage"
 import WelcomeArea from "./components/WelcomeArea"
 import ChatArea from "./components/ChatArea"
-import CreateGroups from "./components/CreateGroups"
-import OnlineUsers from "./components/OnlineUsers"
 import SignupPage from "./pages/SignupPage"
-import AllChats from "./components/AllChats"
-import Groups from "./components/Groups"
-import Sidebar from "./components/Sidebar"
+
+import { useEffect } from "react";
+import useSocket from "./hooks/userSocket";
+import { useSelector } from "react-redux";
+import TimeAgo from 'javascript-time-ago'
+
+import en from 'javascript-time-ago/locale/en'
+import ru from 'javascript-time-ago/locale/ru'
+import VerifyotpPage from "./pages/VerifyotpPage";
+
+TimeAgo.addDefaultLocale(en)
+TimeAgo.addLocale(ru)
 
 
 const LayoutComponent=()=>{
@@ -23,21 +30,12 @@ const LayoutComponent=()=>{
   )
 }
 
-// const ReqAuthComponent=()=>{
-//   return (
-//     <div className=''>
-//       <Navbar />
-//       <Outlet />
-//       <Footer />
-//     </div>
-//   )
-// }
 
 const ReqAuthComponent=()=>{
   //check auth
 
   const accessToken=Cookies.get("accessToken");
-  console.log(accessToken);
+
   return(
     
     <>
@@ -55,7 +53,7 @@ const ReqAuthComponent=()=>{
 const LoginSignUpComponent=()=>{
   // localStorage.removeItem("userData");
   const accessToken=Cookies.get("accessToken");
-  console.log(accessToken);
+
   return (
     <>
       {!accessToken? <div className=''>
@@ -104,6 +102,10 @@ const router=createBrowserRouter([
         path: "/signup",
         element:<SignupPage />
       },
+      {
+        path:"/verify-otp",
+        element:<VerifyotpPage />
+      }
       
     ]
   }
@@ -113,6 +115,9 @@ const router=createBrowserRouter([
 
 function App() {
 
+
+
+  
 
   return (
     <RouterProvider router={router} />

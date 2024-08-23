@@ -2,17 +2,26 @@ import React,{useState} from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from "js-cookie";
-import network from '../assets/network.png'
+import network from '../../assets/network.png'
 
 import Alert from '@mui/material/Alert';
 import { Backdrop, CircularProgress, Snackbar } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAuth } from '../../Features/authSlice';
+import useSocket from '../../hooks/userSocket';
+import { io } from 'socket.io-client';
+
 
 
 const LOGIN_URL="http://localhost:5000/api/auth/login";
+const ENDPOINT="http://localhost:5000"
 
 const LoginContainer = () => {
   
   const navigate=useNavigate();
+  const dispath=useDispatch();
+  const {socket,setSocket}=useSocket();
+  const auth=useSelector((state)=>state.authKey);
 
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
@@ -36,12 +45,27 @@ const LoginContainer = () => {
         }
         const res=await axios.post(LOGIN_URL,{email,password},config);
         console.log(res.data);
-        navigate("/app",{replace:true});
+        
         //localStorage.setItem("userData",JSON.stringify(res.data));
 
-        var expiryTime = new Date(new Date().getTime() + 15 * 60 * 1000);
-        Cookies.remove("accessToken");
-        Cookies.set("accessToken",res.data.accessToken,{expires:expiryTime});
+        if(!res.data?.verified){
+            navigate("/verify-otp",{replace:true,state:{user:res.data}});
+        }
+
+        else{
+            var expiryTime = new Date(new Date().getTime() + 15 * 60 * 1000);
+            Cookies.remove("accessToken");
+            Cookies.set("accessToken",res.data.accessToken,{expires:expiryTime});
+            dispath(setAuth({_id:res.data._id,userName:res.data.userName,password:password,email:res.data.email,profilePicture:res.data?.profilePicture,mobileNo:res.data?.mobileNo}))
+            setSocket(io(ENDPOINT)); //fire connection event for backend
+            if(socket && auth){
+                console.log(auth);
+                socket.emit("setup",auth);
+                console.log(socket);
+                
+            }
+            navigate("/app",{replace:true});
+        }
         
     } catch (error) {
         if(error?.response){
@@ -61,7 +85,7 @@ const LoginContainer = () => {
             }
         }
         else{
-            setError("Client side error");
+            setError("Some error occured");
         }
         console.log(error);
         console.log(Error);
@@ -135,7 +159,8 @@ const LoginContainer = () => {
                     className='focus:outline-none border px-3 py-3 rounded border-gray-300 text-base ' 
                     placeholder='Password'
                     onChange={(e)=>setPassword(e.target.value)} 
-                    value={password} />
+                    value={password}
+                    autoComplete='on' />
 
                     <div className='flex justify-between'>
                         <div className='flex items-center gap-1'>
